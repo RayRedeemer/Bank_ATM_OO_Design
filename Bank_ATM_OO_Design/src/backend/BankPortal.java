@@ -1,5 +1,6 @@
 package backend;
 
+import db.*;
 import gui.OperationFrame;
 
 import java.util.List;
@@ -11,14 +12,13 @@ import java.util.List;
  */
 public class BankPortal {
     private int day;
-
     private String userID;
     private Bank bank; // Currently we only support one bank
 
     private static BankPortal bankPortal = null;
 
     BankPortal() {
-        this.day = 0; // initial start day
+        this.day = db.DatabasePortal.getInstance().restoreSession(); // restore initial start day. In default it is 0
         this.bank = new Bank(); // set up our Bank
     }
 
@@ -46,6 +46,7 @@ public class BankPortal {
         return this.bank;
     }
 
+
     /**
      * bind the user who's interacting with GUI
      *
@@ -59,6 +60,21 @@ public class BankPortal {
         this.setUserID(userID);
     }
 
+    /**
+     * save system states (day, accounts, users) to DB when system exits
+     */
+    public void saveStateToDB() {
+        DatabasePortal myDB = DatabasePortal.getInstance();
+        // add customers
+        for (Customer customer : getBank().getCustomers()) {
+            myDB.addCustomer(customer);
+        }
+        // add managers
+        for (Manager manager : getBank().getManagers()) {
+            myDB.addManager(manager);
+        }
+        myDB.storeSession(getDay());
+    }
     /**
      * open a new account (CK or SAV)
      *
@@ -182,6 +198,7 @@ public class BankPortal {
 
     /**
      * buy stock
+     *
      * @param stockID
      * @param secAccountID
      * @param unit
@@ -197,6 +214,7 @@ public class BankPortal {
 
     /**
      * sell stock given
+     *
      * @param stockID
      * @param secAccountID
      * @param unit
@@ -221,6 +239,7 @@ public class BankPortal {
     public String updateStockPrice(String userID, String stockID, double price) {
         if (checkPermission(userID).equals(SharedConstants.MANAGER)) {
             StockMarket.getInstance().updateStockPrice(stockID, price);
+            DatabasePortal.getInstance().updateStockPrice(stockID, price);
             return SharedConstants.SUCCESS_UPDATE_STOCK_PRICE;
         } else {
             return SharedConstants.ERR_PERMISSION_DENIED;
@@ -233,10 +252,20 @@ public class BankPortal {
 
     /**
      * Get all stock IDs
+     *
      * @return String array of IDs
      */
     public String[] getAllStockID() {
         return StockMarket.getInstance().getAllStockID();
+    }
+
+    /**
+     * get all customer ID
+     *
+     * @return String Array
+     */
+    public String[] getCustomerList() {
+        return getBank().getCustomerList();
     }
 
     public String checkPermission(String userID) {
@@ -262,6 +291,7 @@ public class BankPortal {
 
     /**
      * get stocks owned by a specific sec account
+     *
      * @param secAccount
      * @return
      */
@@ -319,29 +349,29 @@ public class BankPortal {
     public int getDay() {
         return this.day;
     }
-    
+
     /**
      * Method: getReportByDay.
      * Function: A manager can get a report on a specific day.
-     * @author Ziqi Tan
-     * @param a specific day
-     * @return String 
-     * */
+     *
+     * @param requestDay: integer represents a day that the manager is interested in
+     * @return String
+     */
     public String getReportByDay(int requestDay) {
-    	Report requestReport =  BankLogger.getInstance().generateReportByDay(requestDay);
-    	return requestReport.getContent();
+        Report requestReport = BankLogger.getInstance().generateReportByDay(requestDay);
+        return requestReport.getContent();
     }
-    
+
     /**
      * Method: getReport.
      * Function: A manager can get a report update since from the last time he ran the report.
-     * @author Ziqi Tan
+     *
      * @return String
-     * */
+     */
     public String getReport() {
-    	return BankLogger.getInstance().generateReport();
+        return BankLogger.getInstance().generateReport();
     }
-    
+
     public static void main(String[] args) {
         BankPortal portal = new BankPortal();
         portal.run();

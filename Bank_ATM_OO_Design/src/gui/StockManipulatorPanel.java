@@ -14,7 +14,6 @@ import javax.swing.JTextField;
 
 import backend.BankPortal;
 import backend.SharedConstants;
-import backend.StockMarket;
 
 /*
 Author: Ziqi Tan
@@ -136,8 +135,7 @@ public class StockManipulatorPanel extends JPanel implements ActionListener {
     					default:
     						// SharedConstants.SUCCESS_UPDATE_STOCK_PRICE
     						JOptionPane.showMessageDialog(null, "Update successfully!");
-    						updateStockInfo();
-    						
+    						updateStockInfo();  						
     				}   				
 				}
 				catch(NumberFormatException error) {

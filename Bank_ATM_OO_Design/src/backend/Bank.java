@@ -1,6 +1,9 @@
 package backend;
 
+import db.DatabasePortal;
+
 import javax.swing.plaf.synth.SynthEditorPaneUI;
+import javax.xml.crypto.Data;
 import java.util.List;
 import java.util.ArrayList;
 import java.util.Map;
@@ -46,10 +49,47 @@ public class Bank {
         this.securityCountMap = new HashMap<>();
         this.currencyList = new String[]{SharedConstants.USD, SharedConstants.YEN, SharedConstants.CNY};
 
+        readStateFromDB();
         // initial customer/manager
         customerList.add(new Customer("a", "a", "a"));
         managerList.add(new Manager("m", "m", "m", SharedConstants.BANK_ID));
     }
+
+    private void readStateFromDB() {
+        DatabasePortal myDB = DatabasePortal.getInstance();
+
+        // read Accounts
+        List<Account> accountList = myDB.getAccountList();
+        for (Account account : accountList)  {
+            String userID = account.getUserID();
+            String accountID = account.getAccountID();
+            switch (account.getAccountType()) {
+                case SharedConstants.CK:
+                    this.checkingList.add((CheckingAccount)account);
+                    this.checkingMap.put(accountID, (CheckingAccount)account);
+                    this.checkingCountMap.put(userID, this.checkingCountMap.getOrDefault(userID, 0) + 1);
+                case SharedConstants.SAV:
+                    this.savingsList.add((SavingsAccount)account);
+                    this.savingsMap.put(accountID, (SavingsAccount) account);
+                    this.savingsCountMap.put(userID, this.savingsCountMap.getOrDefault(userID, 0) + 1);
+                case SharedConstants.SEC:
+                    this.securityList.add((SecurityAccount) account);
+                    this.securityMap.put(accountID, (SecurityAccount) account);
+                    this.securityCountMap.put(userID, this.securityCountMap.getOrDefault(userID, 0) + 1);
+            }
+        }
+        // read customers
+        this.customerList.addAll(myDB.getCustomerList());
+        // read managers
+        this.managerList.addAll(myDB.getManagerList());
+    }
+
+    public void saveStateToDB() {
+        DatabasePortal myDB = DatabasePortal.getInstance();
+
+    }
+
+
 
     public String getBankName() {
         return this.bankName;
@@ -73,8 +113,8 @@ public class Bank {
 
     /**
      * get the name of a customer or manager
-     * 
-     * @param userID (identification of a user)
+     *
+     * @param userID   (identification of a user)
      * @param identity (whether customer or manager)
      * @return name (user's name)
      */
@@ -98,10 +138,10 @@ public class Bank {
 
     /**
      * create a new user (customer or manager) and add it to the list
-     * 
-     * @param userID (identification of a user)
+     *
+     * @param userID   (identification of a user)
      * @param password
-     * @param name (user's name)
+     * @param name     (user's name)
      * @param identity (whether customer or manager)
      */
     public void addUser(String userID, String password, String name, String identity) {
@@ -117,8 +157,8 @@ public class Bank {
 
     /**
      * open a new account for a user
-     * 
-     * @param userID (identification of a user)
+     *
+     * @param userID      (identification of a user)
      * @param accountType (checking, savings)
      * @return opened account id if succeed, or error message
      */
@@ -209,6 +249,7 @@ public class Bank {
         return SharedConstants.ERR_CLOSE_ACCOUNT;
     }
 
+
     /**
      * make a deposit
      *
@@ -272,8 +313,8 @@ public class Bank {
         } else {
             for (Customer customer : customerList) {
                 if (customer.getUserID().equals(userID)) {
-                    customer.addLoan(amount, loanInterestRate, selectedCurrency);
-                    return SharedConstants.SUCCESS_TRANSACTION;
+                    String loanID = customer.addLoan(amount, loanInterestRate, selectedCurrency);
+                    return loanID;
                 }
             }
         }
@@ -316,16 +357,16 @@ public class Bank {
 
     /**
      * sell some stock
-     * 
+     *
      * @param secAccountID (security accout identification)
      * @param stockID
      * @param unit
      * @return success message
      */
-    public String sellStock(String secAccountID, String stockID, int unit) {
+    public String sellStock(String secAccountID, String stockID, int unit, String company, double price) {
         for (SecurityAccount securityAccount : securityList) {
             if (securityAccount.getAccountID().equals(secAccountID)) {
-                String result = securityAccount.sellStock(stockID, unit, company, targetPrice);
+                String result = securityAccount.sellStock(stockID, unit, company, price);
                 return result;
             }
         }
@@ -474,6 +515,7 @@ public class Bank {
 
     /**
      * check if the given user is a manager
+     *
      * @param userID
      * @return
      */
@@ -499,6 +541,26 @@ public class Bank {
             }
         }
         return -1;
+    }
+
+    /**
+     * get all customer ID
+     * @return String Array
+     */
+    public String[] getCustomerList() {
+        List<String> customerIDList = new ArrayList<>();
+        for (Customer customer : customerList) {
+            customerIDList.add(customer.getUserID());
+        }
+        return customerIDList.toArray(new String[0]);
+    }
+
+    public List<Customer> getCustomers() {
+        return customerList;
+    }
+
+    public List<Manager> getManagers() {
+        return managerList;
     }
 
     /**
@@ -537,6 +599,7 @@ public class Bank {
                 }
                 for (Manager manager : managerList) {
                     if (manager.getUserID().equals(userID) && manager.getPassword().equals(password)) {
+                        BankPortal.getInstance().userLogin(userID);
                         return SharedConstants.SUCCESS_AUTHENTICATE_USER;
                     } else if (manager.getUserID().equals(userID) && !manager.getPassword().equals(password)) {
                         return SharedConstants.ERR_WRONG_PASS;
@@ -549,6 +612,7 @@ public class Bank {
                 }
                 for (Customer customer : customerList) {
                     if (customer.getUserID().equals(userID) && customer.getPassword().equals(password)) {
+                        BankPortal.getInstance().userLogin(userID);
                         return SharedConstants.SUCCESS_AUTHENTICATE_USER;
                     } else if (customer.getUserID().equals(userID) && !customer.getPassword().equals(password)) {
                         return SharedConstants.ERR_WRONG_PASS;

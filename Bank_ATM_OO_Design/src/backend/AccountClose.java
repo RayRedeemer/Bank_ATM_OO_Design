@@ -9,7 +9,7 @@ public class AccountClose extends Transaction {
      * @param creationDay
      * @param accountType
      */
-    AccountClose(String userID, int creationDay, String accountID, String accountType) {
+    public AccountClose(String userID, int creationDay, String accountID, String accountType) {
         super(userID, creationDay, accountID, SharedConstants.ACCOUNT_CLOSE);
         this.accountType = accountType;
     }
@@ -25,6 +25,6 @@ public class AccountClose extends Transaction {
 
     @Override
     public String toString() {
-        return "Day " + getDay() + ": customer " + getUserID() + " closed a " + this.accountType + " account\n";
+        return "Day " + getDay() + ": customer " + getUserID() + " closed a " + this.accountType + " account with Operation Fee: " + SharedConstants.OPERATION_FEE + "\n";
     }
 }

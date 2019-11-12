@@ -5,7 +5,7 @@ package backend;
 public class LoanPayOff extends Transaction {
     private String loanID;
 
-    LoanPayOff(String userID, int creationDay, String loanID) {
+    public LoanPayOff(String userID, int creationDay, String loanID) {
         super(userID, creationDay, SharedConstants.USD, SharedConstants.LOAN_PAY_OFF);
         this.loanID = loanID;
     }
@@ -23,7 +23,7 @@ public class LoanPayOff extends Transaction {
 
     @Override
     public String toString() {
-        return "Day " + getDay() + ": customer " + getUserID() + " paid off a loan\n";
+        return "Day " + getDay() + ": customer " + getUserID() + " paid off a loan " + getLoanID() + "\n";
     }
 }
 

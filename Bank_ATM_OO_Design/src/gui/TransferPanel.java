@@ -7,7 +7,6 @@ import javax.swing.JComboBox;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
-import javax.swing.JTextArea;
 import javax.swing.JTextField;
 
 import backend.BankPortal;
@@ -102,8 +101,7 @@ public class TransferPanel extends JPanel implements ActionListener {
             }
         }
 	}
-	
-	
+		
 	public void updateTargetAccountListBox() {
 		targetAccountList.removeAllItems();
 		targetAccountList.addItem(selectOne);

@@ -3,6 +3,7 @@ package backend;
 public class AccountOpen extends Transaction {
     private String accountType;
     private String savAccountID;
+    private String accountID;
 
     /**
      * constructor for a checking/savings account
@@ -11,7 +12,7 @@ public class AccountOpen extends Transaction {
      * @param creationDay
      * @param accountType
      */
-    AccountOpen(String userID, int creationDay, String accountType) {
+    public AccountOpen(String userID, int creationDay, String accountType) {
         super(userID, creationDay, SharedConstants.ACCOUNT_OPEN);
         this.accountType = accountType;
     }
@@ -37,17 +38,29 @@ public class AccountOpen extends Transaction {
     public String startTransaction() {
         switch (accountType) {
             case SharedConstants.CK:
-                return BankPortal.getInstance().getBank().openAccount(getUserID(), accountType);
+                this.accountID = BankPortal.getInstance().getBank().openAccount(getUserID(), accountType);
+                return this.accountID;
             case SharedConstants.SAV:
-                return BankPortal.getInstance().getBank().openAccount(getUserID(), accountType);
+                this.accountID = BankPortal.getInstance().getBank().openAccount(getUserID(), accountType);
+                return this.accountID;
             case SharedConstants.SEC:
-                return BankPortal.getInstance().getBank().openAccount(getUserID(), accountType, savAccountID);
+                this.accountID = BankPortal.getInstance().getBank().openAccount(getUserID(), accountType, savAccountID);
+                return this.accountID;
         }
         return SharedConstants.ERR_INVALID_TRANSACTION;
     }
 
+    public String getAccountID() {
+        return this.accountID;
+    }
+
+    public String getAccountType() { return this.accountType; }
+
+    public String getSavAccountID() { return this.savAccountID; }
+
     @Override
     public String toString() {
-        return "Day " + getDay() + ": customer " + getUserID() + " opened a " + this.accountType + " account\n";
+        return "Day " + getDay() + ": customer " + getUserID() + " opened a " + this.accountType +
+                " account with Operation Fee: " + SharedConstants.OPERATION_FEE + "\n";
     }
 }

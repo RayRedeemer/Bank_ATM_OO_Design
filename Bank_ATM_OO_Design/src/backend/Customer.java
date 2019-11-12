@@ -2,6 +2,7 @@ package backend;
 
 import java.util.List;
 import java.util.ArrayList;
+import java.util.Iterator;
 
 /**
  * Customer class that represents one of the system actors. A customer can open/close an account, request
@@ -11,7 +12,7 @@ public class Customer extends User {
     private List<LoanAccount> loanList;
     private int collateral;
 
-    Customer(String name, String userID, String password) {
+    public Customer(String name, String userID, String password) {
         super(name, userID, password, SharedConstants.CUSTOMER);
         this.loanList = new ArrayList<>();
         this.collateral = 3;
@@ -36,10 +37,11 @@ public class Customer extends User {
      * @param interest         (interest rate)
      * @param selectedCurrency
      */
-    public void addLoan(double amount, double interest, String selectedCurrency) {
+    public String addLoan(double amount, double interest, String selectedCurrency) {
         LoanAccount loan = new LoanAccount(getUserID(), amount, interest, selectedCurrency, getLoanCount());
         this.loanList.add(loan);
         useCollateral();
+        return loan.getLoanID();
     }
 
     /**
@@ -48,9 +50,10 @@ public class Customer extends User {
      * @param loanID
      */
     public void payoffLoan(String loanID) {
-        for (LoanAccount loan : loanList) {
+        for (Iterator<LoanAccount> iterator = loanList.iterator(); iterator.hasNext();) {
+            LoanAccount loan = iterator.next();
             if (loan.getLoanID().equals(loanID)) {
-                loanList.remove(loan);
+                iterator.remove();
                 addCollateral();
             }
         }
